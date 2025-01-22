@@ -2,19 +2,20 @@
 
 ### Step 1: Install Aktus Client
 
-**NOTE**: Use python 3.12 or higher.
+**Note**: This library requires Python 3.12 or above.
 
 ```python
 # Install the Aktus library
 !pip install aktus_unify-0.1.0-py3-none-any.whl
 ```
 
+### Step 2: Import Packages
 ```python
 # Import necessary modules from the Aktus library
 from aktus_unify import ocr, embedding, chat
 ```
 
-### Step 2: Define Domain and Use Case
+### Step 3: Define `domain` and `usecase`
 ```python
 # Define the domain and use case for which embeddings are created.
 # Update these variables with the specific folder paths you wish to process.
@@ -54,7 +55,7 @@ handbook-revenue-recognition-40-47-7.pdf: {
 
 ---
 
-### Step 3: Check Task Status
+### Step 4: Check Task Status
 ```python
 # Use the task IDs from the embedding response to check their status
 # Replace 'embedding_response["task_ids"]' with the appropriate field from your response.
@@ -63,7 +64,7 @@ tasks.check_tasks_status(embedding_response["task_ids"])
 
 ---
 
-### Step 4: Ask Questions Using the Chat Module
+### Step 5: Ask Questions
 ```python
 from IPython.display import display, Markdown
 
