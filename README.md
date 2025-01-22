@@ -2,7 +2,7 @@
 
 ### Step 1: Install Aktus Client
 
-**Note**: This library requires Python 3.12 or above.
+**Note**: This library requires Python 3.9 or above.
 
 ```python
 # Install the Aktus library
