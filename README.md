@@ -5,6 +5,9 @@
 **Note**: This library requires Python 3.9 or above.
 
 ```python
+# Uninstall existing version (if any)
+!pip uninstall -y aktus_unify-0.1.0-py3-none-any.whl
+
 # Install the Aktus library
 !pip install aktus_unify-0.1.0-py3-none-any.whl
 ```
@@ -12,70 +15,89 @@
 ### Step 2: Import Packages
 ```python
 # Import necessary modules from the Aktus library
-from aktus_unify import ocr, embedding, chat
+from aktus_unify import chat, embedding, tasks
 ```
 
-### Step 3: Define `domain` and `usecase`
+### Step 3: Define Domain, Usecase and Start Ingestion
 ```python
-# Define the domain and use case for which embeddings are created.
-# Update these variables with the specific folder paths you wish to process.
-domain = ""  # Path to the domain folder containing documents
-usecase = ""  # Sub-folder or specific use case within the domain
+# Define the embedding endpoint
+EMBEDDING_ENDPOINT = "http://<your-embedding-endpoint>:8080/vectorindex/embed"
 
-# Create an embedding for all documents in the specified folder
-# Replace 'domain' and 'usecase' with appropriate values.
-embedding_response = embedding.create_embedding(domain=domain, usecase=usecase, id="0")
+# Define the domain and use case
+domain = ""  # Update with your domain
+usecase = ""  # Update with your usecase
 
-# Print the response from the embedding creation to track progress
+# Create an embedding for all documents in the domain/usecase folder
+embedding_response = embedding.create_embedding(
+    domain=domain, 
+    usecase=usecase, 
+    id="0", 
+    endpoint_url=EMBEDDING_ENDPOINT
+)
+
+# Print the response from the embedding creation
 print(embedding_response)
 ```
 
-**Expected Output:**
-The code will output a dictionary containing the embedding status for each file in the specified folder. Example:
+### Step 4: Check Task Status
+```python
+# Define the database manager endpoint
+DB_MANAGER_ENDPOINT = "http://<your-db-manager-endpoint>"
 
-```plaintext
-handbook-revenue-recognition-40-47-7.pdf: {
-    'id': 'unique-identifier',
-    'status': 'SUCCESS',
-    'date_created': 'timestamp',
-    'date_updated': 'timestamp',
-    'expiration_date': None,
-    'result': {'result': None, 'task_name': 'notify_vdb_endpoint'},
-    'service_name': 'service-ocr',
-    'task_metadata': {
-        'llm_model': None,
-        'document_path': '/data/blob/document_upload/<filename>.pdf'
+# Get tasks status
+tasks_response = tasks.check_tasks_status(
+    task_ids=embedding_response["task_ids"], 
+    endpoint_url=DB_MANAGER_ENDPOINT
+)
+
+# Print status for each document
+for k, v in tasks_response.items():
+    print(f"Document_name: {k} | Status: {v}")
+```
+
+**Expected Output Format:**
+```
+<document-name>:
+    {
+        'id': '<some-uuid>',
+        'status': 'SUCCESS',
+        'date_created': '<some-utc-timestamp>',
+        'date_updated': '<some-utc-timestamp>',
+        'expiration_date': None,
+        'result':
+            {
+                'result': None,
+                'task_name': 'notify_vdb_endpoint'
+            },
+        'service_name': 'service-ocr',
+        'task_metadata':
+            {
+                'llm_model': None,
+                'document_path': '<path-to-document-on-azure-blob>'
+            }
     }
-}
 ```
 
 **Important Notes:**
 - Multiple dictionaries may be printed if multiple files exist in the specified folder.
-- Ensure the `status` is `SUCCESS` and `task_name` is `notify_vdb_endpoint` to confirm ingestion.
+- The ingestion for a specific file is complete only when:
+  - `status` is `SUCCESS`
+  - `task_name` is `notify_vdb_endpoint`
+- If these conditions are not met, rerun the status check to see updates.
 
----
-
-### Step 4: Check Task Status
-```python
-# Use the task IDs from the embedding response to check their status
-# Replace 'embedding_response["task_ids"]' with the appropriate field from your response.
-tasks.check_tasks_status(embedding_response["task_ids"])
-```
-
----
-
-### Step 5: Ask Questions
+### Step 5: Chat with Your Documents
 ```python
 from IPython.display import display, Markdown
 
-# Ask a question based on the processed embeddings
-# Replace 'user_question' with the actual question string.
-# 'domain' and 'usecase' should match the values provided earlier.
+# Define the chat endpoint
+CHAT_ENDPOINT = "http://<your-chat-endpoint>:8080/chat/copilot"
+
+# Ask questions about your documents
 async for line in chat.ask_question(
-    user_question="",  # Add the user question here as a string
+    user_question="",  # Add your question here
     domain=domain,
-    usecase=usecase
+    usecase=usecase,
+    endpoint_url=CHAT_ENDPOINT
 ):
-    # Display the output in Markdown format for better readability
     display(Markdown(line))
 ```
